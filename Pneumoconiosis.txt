@@ -1,0 +1,59 @@
+
+# Random Forest Classification
+
+# Importing the dataset
+library("readxl")
+
+dataset = read_excel("CollatedPneumoconiosisData-GE Internal.xlsx", sheet = "RightUpper")
+
+# Encoding the target feature as factor
+dataset$Label = factor(dataset$Label)
+
+# Splitting the dataset into the Training set and Test set
+# install.packages('caTools')
+library(caTools)
+set.seed(123)
+split = sample.split(dataset$Label, SplitRatio = 0.75)
+training_set = subset(dataset, split == TRUE)
+test_set = subset(dataset, split == FALSE)
+
+# Feature Scaling
+training_set[,c(2:40)] = scale(training_set[,c(2:40)])
+test_set[,c(2:40)] = scale(test_set[,c(2:40)])
+
+# Fitting Random Forest Classification to the Training set
+# install.packages('randomForest')
+library(randomForest)
+set.seed(123)
+classifier = randomForest(x = training_set[,c(2:40),
+                          y = training_set$Label,
+                          ntree = 500)
+
+# Predicting the Test set results
+y_pred = predict(classifier, newdata = test_set[,c(2:40)])
+
+# Making the Confusion Matrix
+cm = table(test_set[, 41], y_pred)
+
+# Tabulating actual and predicted results for each patient id and writing it to csv
+
+RightUpper = cbind(testset[,c(1,41)],y_pred)
+
+write.csv(RightUpper, file = "RightUpper.csv",row.names=FALSE)
+
+# Comparing the actual and predicted results based on all 6 files
+
+
+output_dataset = merge(RightUpper, RightMiddle, by='Patient_ID', all = TRUE) %>%
+                merge(., RightLower, by='Patient_ID', all = TRUE) %>%
+                merge(., LeftUpper, by='Patient_ID', all = TRUE) %>%
+                merge(., LeftMiddle, by='Patient_ID', all = TRUE) %>%
+                merge(., LeftLower, by='Patient_ID', all = TRUE)
+
+output_dataset$Actual =  max(output_dataset[,c(2,4,6,8,10,12)])
+output_dataset$Predict =  max(output_dataset[,c(3,5,7,9,11,13)])
+
+# Making the Confusion Matrix
+
+cm = table(output_dataset$Actual,output_dataset$Predict)
+
